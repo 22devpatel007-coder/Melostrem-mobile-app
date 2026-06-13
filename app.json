@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MeloStream",
-    "slug": "melostream-mobile",
+    "slug": "melostream",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/icon.png",
@@ -35,7 +35,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "eee6d3ef-49c3-4136-82ad-fb7cae6e4716"
       }
     }
   }

@@ -107,7 +107,7 @@ export function setUserId(uid: string | null) {
   _userId = uid || null;
 }
 
-export function report(error: unknown, meta: any = {}) {
+export function reportError(error: unknown, meta: any = {}) {
   try {
     if (_sessionReportCount >= MAX_REPORTS_PER_SESSION) return;
     if (_consecutiveSendFailures >= MAX_SEND_FAILURES) return;

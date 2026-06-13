@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import TrackPlayer, { State, RepeatMode } from "react-native-track-player";
-import { MMKV } from "react-native-mmkv";
-
-const storage = new MMKV({ id: "player-storage" });
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// TODO: Replace AsyncStorage with MMKV after dev build setup
 
 // ── Lazy queueStore accessor ──────────────────────────────────────────────────
 let _getQueueState: (() => any) | null = null;
@@ -314,7 +313,7 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   currentSong: null,
   recentlyPlayed: [],
   isPlaying: false,
-  volume: parseFloat(storage.getString("melostream_volume") ?? "1") || 1,
+  volume: 1,
   currentTime: 0,
   duration: 0,
   shuffleMode: "none",
@@ -608,7 +607,7 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setVolume: (v) => {
     TrackPlayer.setVolume(v);
-    storage.set("melostream_volume", String(v));
+    AsyncStorage.setItem("melostream_volume", String(v));
     set({ volume: v });
   },
 

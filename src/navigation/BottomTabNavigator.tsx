@@ -4,10 +4,10 @@ import { BottomTabParamList } from '../types/navigation';
 import { COLORS } from '../constants/colors';
 
 // Screens — created in Phase 8
-import HomeScreen from '../screens/home/HomeScreen';
-import SearchScreen from '../screens/search/SearchScreen';
-import PlaylistsScreen from '../screens/playlists/PlaylistsScreen';
-import LikedSongsScreen from '../screens/liked/LikedSongsScreen';
+import { HomeScreen } from '../screens/home/HomeScreen';
+import { SearchScreen } from '../screens/search/SearchScreen';
+import { PlaylistsScreen } from '../screens/playlists/PlaylistsScreen';
+import { LikedSongsScreen } from '../screens/liked/LikedSongsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
