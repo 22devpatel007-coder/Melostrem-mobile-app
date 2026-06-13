@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MeloStream",
-    "slug": "melostream-mobile",
+    "slug": "melostream-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/icon.png",
@@ -15,7 +15,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.yourcompany.melostream",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -35,8 +37,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "e70135b7-4f8c-4253-bb65-82351a831211"
       }
-    }
+    },
+    "owner": "devv02"
   }
 }
