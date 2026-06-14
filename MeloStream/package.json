@@ -52,7 +52,10 @@
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": ["react-native-track-player", "expo-modules-jsi"],
+        "exclude": [
+          "react-native-track-player",
+          "expo-modules-jsi"
+        ],
         "listUnknownPackages": false
       }
     }
