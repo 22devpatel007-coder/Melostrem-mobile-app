@@ -1,35 +1,43 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { Text, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types/navigation';
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { usePlayerStore } from '../store/playerStore';
+import NetworkErrorBanner from '@components/errors/NetworkErrorBanner';
+import { MiniPlayerBar } from '@components/player/MiniPlayerBar';
+import { FullScreenPlayerScreen } from '@screens/player/FullScreenPlayerScreen';
 
-// Placeholder screens — replaced in later phases
-import { View as V, Text } from 'react-native';
-const Placeholder = (name: string) => () => <V style={{flex:1,backgroundColor:'#0F0F0F'}}><Text style={{color:'#fff'}}>{name}</Text></V>;
-
-const FullScreenPlayerScreen  = Placeholder('FullScreenPlayer');
-const PlaylistDetailScreen    = Placeholder('PlaylistDetail');
-const ArtistDetailScreen      = Placeholder('ArtistDetail');
-const AlbumDetailScreen       = Placeholder('AlbumDetail');
-const SongDetailScreen        = Placeholder('SongDetail');
-const SuggestionsScreen       = Placeholder('Suggestions');
-
-// Temporary MiniPlayerBar stub — replaced in Phase 8
-const MiniPlayerBar = () => (
-  <View style={styles.miniPlayer} />
+const Placeholder = (name: string) => () => (
+  <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+    <Text style={{ color: '#fff' }}>{name}</Text>
+  </View>
 );
+
+
+const PlaylistDetailScreen   = Placeholder('PlaylistDetail');
+const ArtistDetailScreen     = Placeholder('ArtistDetail');
+const AlbumDetailScreen      = Placeholder('AlbumDetail');
+const SongDetailScreen       = Placeholder('SongDetail');
+const SuggestionsScreen      = Placeholder('Suggestions');
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export function AppNavigator() {
   const currentSong = usePlayerStore((s) => s.currentSong);
 
+
+
+const handleExpand = useCallback(() => {}, []);
+
   return (
     <View style={styles.root}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Tabs"             component={BottomTabNavigator} />
+      <NetworkErrorBanner />
+
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Tabs"            component={BottomTabNavigator} />
         <Stack.Screen
           name="FullScreenPlayer"
           component={FullScreenPlayerScreen}
@@ -62,7 +70,7 @@ export function AppNavigator() {
         />
       </Stack.Navigator>
 
-      {currentSong && <MiniPlayerBar />}
+      {currentSong && <MiniPlayerBar onExpand={handleExpand} />}
     </View>
   );
 }
@@ -71,11 +79,5 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#0F0F0F',
-  },
-  miniPlayer: {
-    height: 64,
-    backgroundColor: '#161616',
-    borderTopWidth: 1,
-    borderTopColor: '#2a2a2a',
   },
 });
