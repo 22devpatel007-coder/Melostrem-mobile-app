@@ -19,7 +19,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
             Capability.SeekTo,
             Capability.Stop,
           ],
-          compactCapabilities: [
+          notificationCapabilities: [
             Capability.Play,
             Capability.Pause,
             Capability.SkipToNext,
