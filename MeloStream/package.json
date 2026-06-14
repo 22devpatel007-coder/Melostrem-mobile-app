@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
-    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
     "@react-navigation/bottom-tabs": "^7.18.0",
     "@react-navigation/native": "^7.3.1",
@@ -25,7 +25,6 @@
     "expo-font": "~56.0.6",
     "expo-image": "~56.0.11",
     "expo-linear-gradient": "~56.0.4",
-    "expo-modules-autolinking": "~56.0.0",
     "expo-secure-store": "~56.0.4",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
