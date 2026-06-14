@@ -49,5 +49,13 @@
   "overrides": {
     "@react-native-async-storage/async-storage": "2.2.0"
   },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": ["react-native-track-player", "expo-modules-jsi"],
+        "listUnknownPackages": false
+      }
+    }
+  },
   "private": true
 }
