@@ -6,11 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icons/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0F0F0F"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.yourcompany.melostream",
@@ -29,7 +24,18 @@
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ]
     },
-    "plugins": ["expo-font", "expo-secure-store"],
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0F0F0F"
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "e70135b7-4f8c-4253-bb65-82351a831211"
