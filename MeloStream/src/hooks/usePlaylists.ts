@@ -10,6 +10,7 @@ import {
   deletePlaylist as deletePlaylistREST,
   addSongToPlaylist as addSongREST,
   removeSongFromPlaylist as removeSongREST,
+  reorderPlaylistSongs as reorderREST,
 } from '@services/playlists.service';
 import { useAuthStore } from '@store/authStore';
 import { useErrorHandler } from '@hooks/useErrorHandler';
@@ -83,7 +84,7 @@ export const usePlaylists = () => {
   const remove     = useMutation({ mutationFn: deletePlaylistREST, onSuccess: invalidate });
   const addSong    = useMutation({ mutationFn: ({ playlistId, songId }: { playlistId: string; songId: string }) => addSongREST(playlistId, songId), onSuccess: invalidate });
   const removeSong = useMutation({ mutationFn: ({ playlistId, songId }: { playlistId: string; songId: string }) => removeSongREST(playlistId, songId), onSuccess: invalidate });
-
+  const reorder = useMutation({ mutationFn: ({ playlistId, songIds }: { playlistId: string; songIds: string[] }) => reorderREST(playlistId, songIds), onSuccess: invalidate });
   return {
     playlists: query.data ?? [],
     isLoading: query.isLoading,
@@ -95,5 +96,6 @@ export const usePlaylists = () => {
     deletePlaylist: remove.mutate,
     addSongToPlaylist: addSong.mutate,
     removeSongFromPlaylist: removeSong.mutate,
+    reorderSongs: reorder.mutate,
   };
 };

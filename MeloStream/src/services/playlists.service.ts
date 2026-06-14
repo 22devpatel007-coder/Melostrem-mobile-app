@@ -13,6 +13,7 @@ const extractObject = (res: any): any => {
   return {};
 };
 
+
 // ── Service functions ─────────────────────────────────────────────────────────
 export const getPlaylists      = async () => extractArray(await api.get('/playlists'));
 export const getPlaylistById   = async (id: string) => extractObject(await api.get(`/playlists/${id}`));
@@ -21,6 +22,8 @@ export const updatePlaylist    = async (id: string, data: any) => extractObject(
 export const deletePlaylist    = async (id: string) => { const res = await api.delete(`/playlists/${id}`); return res?.data?.data ?? res?.data ?? { deleted: true }; };
 export const addSongToPlaylist = async (playlistId: string, songId: string) => extractObject(await api.post(`/playlists/${playlistId}/songs`, { songId }));
 export const removeSongFromPlaylist = async (playlistId: string, songId: string) => { const res = await api.delete(`/playlists/${playlistId}/songs/${songId}`); return res?.data?.data ?? res?.data ?? { removed: true }; };
+export const reorderPlaylistSongs = async (playlistId: string, songIds: string[]) =>
+  extractObject(await api.put(`/playlists/${playlistId}/songs/reorder`, { songIds }));
 
 export const fetchAdminPlaylists = async (): Promise<any[]> => {
   try {

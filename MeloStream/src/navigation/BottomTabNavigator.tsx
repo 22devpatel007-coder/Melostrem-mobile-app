@@ -8,7 +8,7 @@ import { HomeScreen } from '../screens/home/HomeScreen';
 import { SearchScreen } from '../screens/search/SearchScreen';
 import { PlaylistsScreen } from '../screens/playlists/PlaylistsScreen';
 import { LikedSongsScreen } from '../screens/liked/LikedSongsScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
+import { ProfileScreen }from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -20,6 +20,7 @@ export function BottomTabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
+        animation: 'fade',
         tabBarStyle: {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
