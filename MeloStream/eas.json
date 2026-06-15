@@ -6,13 +6,16 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "projectRoot": "MeloStream"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "projectRoot": "MeloStream"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "projectRoot": "MeloStream"
     }
   },
   "submit": {
