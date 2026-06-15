@@ -9,11 +9,11 @@ registerQueryClient(queryClient);
 export default function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PlayerProvider>
+      <PlayerProvider>
+        <AuthProvider>
           {children}
-        </PlayerProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </PlayerProvider>
     </QueryClientProvider>
   );
 }

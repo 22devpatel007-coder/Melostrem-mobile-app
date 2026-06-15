@@ -10,7 +10,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.yourcompany.melostream",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -38,9 +40,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "e70135b7-4f8c-4253-bb65-82351a831211"
+        "projectId": "3173dd60-a686-47af-b52a-4a051c496f03"
       }
     },
-    "owner": "devv02"
+    "owner": "devv020"
   }
 }
