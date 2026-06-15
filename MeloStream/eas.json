@@ -1,21 +1,26 @@
 {
   "cli": {
-    "version": ">= 20.1.0",
-    "appVersionSource": "remote"
+    "version": ">= 7.0.0"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "projectRoot": "MeloStream"
+      "android": {
+        "buildType": "apk"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "projectRoot": "MeloStream"
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "projectRoot": "MeloStream"
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {
