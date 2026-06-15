@@ -16,6 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.18.0",
     "@react-navigation/native": "^7.3.1",
     "@react-navigation/native-stack": "^7.17.3",
+    "@rntp/player": "^5.5.0",
     "@sentry/react-native": "~7.11.0",
     "@tanstack/react-query": "^5.101.0",
     "axios": "^1.17.0",
@@ -39,7 +40,6 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
-    "react-native-track-player": "^4.1.2",
     "react-native-worklets": "0.8.3",
     "zustand": "^5.0.14"
   },
@@ -56,7 +56,7 @@
     "doctor": {
       "reactNativeDirectoryCheck": {
         "exclude": [
-          "react-native-track-player",
+          "@rntp/player",
           "expo-modules-jsi"
         ],
         "listUnknownPackages": false

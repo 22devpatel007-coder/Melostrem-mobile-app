@@ -28,11 +28,12 @@
       "expo-dev-client",
       "expo-font",
       "expo-secure-store",
+      ["@rntp/player", {}],
       [
         "expo-build-properties",
         {
           "android": {
-            "newArchEnabled": false
+            "newArchEnabled": true
           }
         }
       ],
