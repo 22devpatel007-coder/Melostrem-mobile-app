@@ -1,5 +1,5 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeAuth, getAuth, inMemoryPersistence } from 'firebase/auth';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeAuth, getAuth, inMemoryPersistence, Auth } from 'firebase/auth';
 import { Config } from './index';
 
 const firebaseConfig = {
@@ -8,11 +8,18 @@ const firebaseConfig = {
   projectId: Config.firebase.projectId,
 };
 
-const isNew = getApps().length === 0;
-const app = isNew ? initializeApp(firebaseConfig) : getApp();
-export const auth = isNew
+let app: FirebaseApp;
+let auth: Auth;
 
-  ? initializeAuth(app, { persistence: inMemoryPersistence })
-  : getAuth(app);
-console.log('[firebase] auth initialized:', !!auth);
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  auth = getApps().length <= 1
+    ? initializeAuth(app, { persistence: inMemoryPersistence })
+    : getAuth(app);
+} catch (e) {
+  app = getApp();
+  auth = getAuth(app);
+}
+
+export { auth };
 export default app;

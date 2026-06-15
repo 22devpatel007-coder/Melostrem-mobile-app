@@ -10,9 +10,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.yourcompany.melostream",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ]
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
@@ -27,6 +25,7 @@
       ]
     },
     "plugins": [
+      "expo-dev-client",
       "expo-font",
       "expo-secure-store",
       [

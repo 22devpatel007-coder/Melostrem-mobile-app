@@ -8,7 +8,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const { setUser, setAdmin, setLoading } = useAuthStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth , async (firebaseUser) => {
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
         await SecureStore.setItemAsync('auth_token', token);
