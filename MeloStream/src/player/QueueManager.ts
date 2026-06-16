@@ -1,28 +1,26 @@
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, { type MediaItem } from '@rntp/player';
 import { buildTrack } from './TrackBuilder';
 import { Song } from '../types/song';
 
 export const QueueManager = {
-  async setQueue(songs: Song[], startIndex = 0) {
-    await TrackPlayer.reset();
+  setQueue(songs: Song[], startIndex = 0) {
     const tracks = songs.map(buildTrack);
-    await TrackPlayer.add(tracks);
-    await TrackPlayer.skip(startIndex);
+    TrackPlayer.setMediaItems(tracks, startIndex);
   },
 
-  async addToQueue(song: Song) {
-    await TrackPlayer.add(buildTrack(song));
+  addToQueue(song: Song) {
+    TrackPlayer.addMediaItem(buildTrack(song));
   },
 
-  async removeFromQueue(index: number) {
-    await TrackPlayer.remove(index);
+  removeFromQueue(index: number) {
+    TrackPlayer.removeMediaItem(index);
   },
 
-  async skipTo(index: number) {
-    await TrackPlayer.skip(index);
+  skipTo(index: number) {
+    TrackPlayer.skipToIndex(index);
   },
 
-  async clear() {
-    await TrackPlayer.reset();
+  clear() {
+    TrackPlayer.clear();
   },
 };

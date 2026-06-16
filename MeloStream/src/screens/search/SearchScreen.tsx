@@ -22,7 +22,7 @@ import {
 import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createMMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useSearch } from '@hooks/useSearch';
 import { usePlayerStore } from '@store/playerStore';
@@ -37,7 +37,7 @@ import type { AppStackParamList } from '../../types/navigation';
 type AppNavigatorProp = NativeStackNavigationProp<AppStackParamList>;
 
 // ── MMKV search history (Rule 4) ──────────────────────────────────────────────
-const storage = createMMKV({ id: 'melostream-search' });
+const storage = new MMKV({ id: 'melostream-search' });
 const HISTORY_KEY = 'search_history';
 const MAX_HISTORY = 8;
 

@@ -1,6 +1,6 @@
-import { createMMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 
-const storage = createMMKV({ id: 'melostream-storage' });
+const storage =new MMKV({ id: 'melostream-storage' });
 
 const KEY = 'search_history';
 const MAX = 10;

@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import TrackPlayer, { State, RepeatMode } from "react-native-track-player";
-import { createMMKV } from 'react-native-mmkv';
+import TrackPlayer, { RepeatMode, type PlaybackState } from "@rntp/player";
+import { MMKV } from "react-native-mmkv";
 
-const storage = createMMKV({ id: "player-storage" });
+const storage = new MMKV({ id: "player-storage" });
 
 // ── Lazy queueStore accessor ──────────────────────────────────────────────────
 let _getQueueState: (() => any) | null = null;
@@ -452,16 +452,15 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
     }));
 
     try {
-      await TrackPlayer.reset();
-      await TrackPlayer.add({
-        id: song.id,
+      TrackPlayer.setMediaItem({
+        mediaId: song.id,
         url: src,
         title: song.title,
         artist: song.artist ?? "Unknown Artist",
-        artwork: song.coverUrl ?? song.imageUrl ?? undefined,
+        artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
         duration: song.duration ?? undefined,
       });
-      await TrackPlayer.play();
+      TrackPlayer.play();
       set({ isPlaying: true });
     } catch (err: any) {
       console.error("[playerStore] TrackPlayer error:", err.message);
@@ -627,8 +626,8 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   setRepeatMode: (mode) => {
     const rpMap = {
       none: RepeatMode.Off,
-      all: RepeatMode.Queue,
-      one: RepeatMode.Track,
+      all: RepeatMode.All,
+      one: RepeatMode.One,
     };
     TrackPlayer.setRepeatMode(rpMap[mode]);
     set({ repeatMode: mode });
@@ -650,7 +649,8 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   stop: async () => {
-    await TrackPlayer.reset();
+    TrackPlayer.stop();
+    TrackPlayer.clear();
     _pendingNextAfterFetch = false;
     set({
       currentSong: null,
@@ -667,7 +667,8 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   stopAndClose: async () => {
-    await TrackPlayer.reset();
+    TrackPlayer.stop();
+    TrackPlayer.clear();
     _pendingNextAfterFetch = false;
     set({
       currentSong: null,

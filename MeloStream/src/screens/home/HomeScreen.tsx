@@ -34,7 +34,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createMMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 import { useSongs } from '@hooks/useSongs';
 import { usePlayerStore } from '@store/playerStore';
 import { useAuthStore } from '@store/authStore';
@@ -44,7 +44,7 @@ import { LAYOUT } from '@constants/layout';
 import type { Song } from '../../types/song';
 
 // ── MMKV instance (Rule 4: search history in MMKV) ───────────────────────────
-const storage = createMMKV({ id: 'melostream-search-history' });
+const storage = new MMKV({ id: 'melostream-search-history' });
 
 const HISTORY_KEY = 'search_history';
 const MAX_HISTORY = 8;
