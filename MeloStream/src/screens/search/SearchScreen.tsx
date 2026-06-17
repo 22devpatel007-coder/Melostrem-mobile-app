@@ -37,29 +37,30 @@ import type { AppStackParamList } from '../../types/navigation';
 type AppNavigatorProp = NativeStackNavigationProp<AppStackParamList>;
 
 // ── MMKV search history (Rule 4) ──────────────────────────────────────────────
-const storage = new MMKV({ id: 'melostream-search' });
+let _storage: MMKV | null = null;
+const getStorage = () => _storage ?? (_storage = new MMKV({ id: 'melostream-search' }));
 const HISTORY_KEY = 'search_history';
 const MAX_HISTORY = 8;
 
 function readHistory(): string[] {
   try {
-    const raw = storage.getString(HISTORY_KEY);
+    const raw = getStorage().getString(HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 function pushHistory(query: string): void {
   try {
     const prev = readHistory().filter((q) => q !== query);
-    storage.set(HISTORY_KEY, JSON.stringify([query, ...prev].slice(0, MAX_HISTORY)));
+    getStorage().set(HISTORY_KEY, JSON.stringify([query, ...prev].slice(0, MAX_HISTORY)));
   } catch {}
 }
 function removeEntry(query: string): string[] {
   const updated = readHistory().filter((q) => q !== query);
-  storage.set(HISTORY_KEY, JSON.stringify(updated));
+  getStorage().set(HISTORY_KEY, JSON.stringify(updated));
   return updated;
 }
 function clearHistory(): void {
-  storage.set(HISTORY_KEY, JSON.stringify([]));
+  getStorage().set(HISTORY_KEY, JSON.stringify([]));
 }
 
 // ── Artist extraction ─────────────────────────────────────────────────────────
