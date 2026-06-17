@@ -1,4 +1,4 @@
-import TrackPlayer, { Event, State } from 'react-native-track-player';
+import TrackPlayer, { Event, PlaybackState } from '@rntp/player';
 
 export async function PlaybackService() {
   TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
@@ -15,18 +15,20 @@ export async function PlaybackService() {
     usePlayerStore.getState().playPrev();
   });
 
-  TrackPlayer.addEventListener(Event.RemoteSeek, (e) => TrackPlayer.seekTo(e.position));
+  TrackPlayer.addEventListener(Event.RemoteSeek, (e) =>
+    TrackPlayer.seekTo(e.position)
+  );
 
-  TrackPlayer.addEventListener(Event.RemoteDuck, (e) => {
-    if (e.permanent || e.paused) TrackPlayer.pause();
-    else TrackPlayer.play();
+  TrackPlayer.addEventListener(Event.IsPlayingChanged, (e) => {
+    const { usePlayerStore } = require('@store/playerStore');
+    usePlayerStore.setState({ isPlaying: e.playing });
   });
 
-  TrackPlayer.addEventListener(Event.PlaybackState, (e) => {
+  TrackPlayer.addEventListener(Event.PlaybackStateChanged, (e) => {
     const { usePlayerStore } = require('@store/playerStore');
-    if (e.state === State.Playing) usePlayerStore.setState({ isPlaying: true });
-    else if (e.state === State.Paused || e.state === State.Stopped)
+    if (e.state === PlaybackState.Ended || e.state === PlaybackState.Idle) {
       usePlayerStore.setState({ isPlaying: false });
+    }
   });
 
   TrackPlayer.addEventListener(Event.PlaybackProgressUpdated, (e) => {
@@ -34,11 +36,13 @@ export async function PlaybackService() {
     usePlayerStore.setState({ currentTime: e.position, duration: e.duration });
   });
 
-  TrackPlayer.addEventListener(Event.PlaybackActiveTrackChanged, (e) => {
-    if (!e.track) return;
+  // MediaItemTransition replaces PlaybackActiveTrackChanged in v5
+  TrackPlayer.addEventListener(Event.MediaItemTransition, (e) => {
+    if (!e.item) return;
     const { usePlayerStore } = require('@store/playerStore');
-    const { queue } = require('@store/queueStore').useQueueStore.getState();
-    const song = queue.find((s: any) => s.id === e.track?.id);
+    const { useQueueStore } = require('@store/queueStore');
+    const { queue } = useQueueStore.getState();
+    const song = queue.find((s: any) => s.id === e.item?.mediaId);
     if (song) usePlayerStore.setState({ currentSong: song });
   });
 }

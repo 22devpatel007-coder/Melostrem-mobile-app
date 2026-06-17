@@ -12,8 +12,6 @@ import {
   Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { auth } from '@config/firebase';
 import { registerWithEmail } from '@services/auth.service';
 import { AuthStackParamList } from '@/types/navigation';
 import { COLORS } from '@constants/colors';

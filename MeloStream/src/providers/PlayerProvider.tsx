@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import TrackPlayer, { Capability } from 'react-native-track-player';
+import TrackPlayer from '@rntp/player';
 
 export default function PlayerProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
@@ -11,33 +11,12 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     async function setup() {
       try {
         await TrackPlayer.setupPlayer({
-          minBuffer: 15,
-          maxBuffer: 50,
-          playBuffer: 2,
-        });
+  contentType: 'music',
+  handleAudioBecomingNoisy: true,
+  android: { wakeMode: 'network' },
+});
       } catch {
         // Already initialized
-      }
-
-      try {
-        await TrackPlayer.updateOptions({
-          capabilities: [
-            Capability.Play,
-            Capability.Pause,
-            Capability.SkipToNext,
-            Capability.SkipToPrevious,
-            Capability.SeekTo,
-            Capability.Stop,
-          ],
-          notificationCapabilities: [
-            Capability.Play,
-            Capability.Pause,
-            Capability.SkipToNext,
-          ],
-          progressUpdateEventInterval: 1,
-        });
-      } catch (e) {
-        console.error('[PlayerProvider] updateOptions failed', e);
       }
     }
 

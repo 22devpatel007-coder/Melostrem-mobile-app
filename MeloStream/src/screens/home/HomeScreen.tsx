@@ -34,7 +34,6 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createMMKV } from 'react-native-mmkv';
 import { useSongs } from '@hooks/useSongs';
 import { usePlayerStore } from '@store/playerStore';
 import { useAuthStore } from '@store/authStore';
@@ -43,9 +42,9 @@ import { TYPOGRAPHY } from '@constants/typography';
 import { LAYOUT } from '@constants/layout';
 import type { Song } from '../../types/song';
 
-// ── MMKV instance (Rule 4: search history in MMKV) ───────────────────────────
-const storage = createMMKV({ id: 'melostream-search-history' });
-
+import { MMKV } from 'react-native-mmkv';
+let _storage: MMKV | null = null;
+const getStorage = () => _storage ?? (_storage = new MMKV({ id: 'melostream-search-history' }));
 const HISTORY_KEY = 'search_history';
 const MAX_HISTORY = 8;
 
@@ -58,7 +57,7 @@ interface HistoryItem {
 
 function readHistory(): HistoryItem[] {
   try {
-    const raw = storage.getString(HISTORY_KEY);
+    const raw = getStorage().getString(HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -67,7 +66,7 @@ function readHistory(): HistoryItem[] {
 
 function saveHistory(items: HistoryItem[]): void {
   try {
-    storage.set(HISTORY_KEY, JSON.stringify(items));
+    getStorage().set(HISTORY_KEY, JSON.stringify(items));
   } catch {}
 }
 

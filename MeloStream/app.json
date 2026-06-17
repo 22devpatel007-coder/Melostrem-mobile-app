@@ -10,9 +10,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.yourcompany.melostream",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ]
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
@@ -27,8 +25,18 @@
       ]
     },
     "plugins": [
+      "expo-dev-client",
+      "expo-updates",
       "expo-font",
       "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "newArchEnabled": false
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -40,9 +48,17 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "3173dd60-a686-47af-b52a-4a051c496f03"
+        "projectId": "f710a7a1-ce5f-4f24-b4c6-9f313ffd9ab9"
       }
     },
-    "owner": "devv020"
+    "owner": "devv20",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f710a7a1-ce5f-4f24-b4c6-9f313ffd9ab9",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0
+    }
   }
 }

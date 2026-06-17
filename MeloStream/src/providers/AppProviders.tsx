@@ -1,19 +1,22 @@
+import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@config/queryClient';
 import { registerQueryClient } from '@store/authStore';
 import AuthProvider from './AuthProvider';
 import PlayerProvider from './PlayerProvider';
 
-registerQueryClient(queryClient);
-
 export default function AppProviders({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    registerQueryClient(queryClient);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <PlayerProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <PlayerProvider>
           {children}
-        </AuthProvider>
-      </PlayerProvider>
+        </PlayerProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
