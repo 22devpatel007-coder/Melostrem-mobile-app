@@ -5,8 +5,6 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@config/firebase';
 import { loginWithEmail } from '@services/auth.service';
 import { useAuthStore } from '@store/authStore';
 import { AuthStackParamList } from '@/types/navigation';

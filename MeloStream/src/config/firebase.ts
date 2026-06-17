@@ -11,12 +11,10 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 
-try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  auth = getApps().length <= 1
-    ? initializeAuth(app, { persistence: inMemoryPersistence })
-    : getAuth(app);
-} catch (e) {
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+  auth = initializeAuth(app, { persistence: inMemoryPersistence });
+} else {
   app = getApp();
   auth = getAuth(app);
 }
