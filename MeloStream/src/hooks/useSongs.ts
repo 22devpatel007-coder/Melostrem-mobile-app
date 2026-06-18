@@ -1,23 +1,7 @@
-/**
- * src/hooks/useSongs.ts
- *
- * Mirrors web useSongs.js logic:
- * - useInfiniteQuery with cursor pagination
- * - staleTime 2min / gcTime 10min
- * - Pagination bridge registration with playerStore
- * - Append new pages to queue on fetch
- * - Shuffle order via session (MMKV instead of sessionStorage)
- *
- * Mobile-specific changes:
- * - TypeScript
- * - MMKV instead of sessionStorage for shuffle seed
- * - Imports from mobile service/store paths
- */
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@constants/queryKeys';
-import { getSongs } from '@services/songs.service';
+import { getSongs, getShuffledSongIds } from '@services/songs.service';
 import { useErrorHandler } from '@hooks/useErrorHandler';
 import  { registerPaginationBridge, appendSongsToQueue } from '@store/playerStore';
 import { useQueueStore } from '@store/queueStore';
@@ -44,6 +28,15 @@ interface UseSongsReturn {
 
 export const useSongs = (limit = PAGE_LIMIT): UseSongsReturn => {
   const appendSongs = useQueueStore((s) => s.appendSongs);
+  const [shuffleOrder, setShuffleOrder] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getShuffledSongIds().then((ids) => {
+      if (!cancelled) setShuffleOrder(ids);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const query = useInfiniteQuery<SongsPage, Error>({
     queryKey: [QUERY_KEYS.SONGS],
@@ -76,8 +69,9 @@ export const useSongs = (limit = PAGE_LIMIT): UseSongsReturn => {
       fetchNextPage: query.fetchNextPage,
       hasNextPage: () => query.hasNextPage ?? false,
       appendSongs: (newSongs: Song[]) => appendSongs(newSongs),
+      shuffleOrder: shuffleOrder ?? [],
     });
-  }, [query.fetchNextPage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [query.fetchNextPage, shuffleOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Append new page to queue on fetch ────────────────────────────────────
   const previousPageCountRef = useRef(0);

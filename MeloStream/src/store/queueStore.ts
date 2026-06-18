@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import usePlayerStore, { registerQueueStore } from './playerStore';
+import { QueueManager } from '../player/QueueManager';
 
 interface QueueState {
   queue: any[];
@@ -23,6 +24,7 @@ const useQueueStore = create<QueueState>((set, get) => ({
     if (!songs || songs.length === 0) return;
     const idx = Math.max(0, Math.min(startIndex, songs.length - 1));
     set({ queue: songs, currentIndex: idx });
+    QueueManager.setQueue(songs, idx);
     const playerState = usePlayerStore.getState();
     playerState.resetShuffleSession();
     playerState.playSong(songs[idx]);
@@ -32,6 +34,7 @@ const useQueueStore = create<QueueState>((set, get) => ({
     if (!songs || songs.length === 0) return;
     const idx = Math.max(0, Math.min(startIndex, songs.length - 1));
     set({ queue: songs, currentIndex: idx });
+    QueueManager.setQueue(songs, idx);
     usePlayerStore.getState().resetShuffleSession();
     usePlayerStore.getState().playSong(songs[idx]);
   },
@@ -49,6 +52,7 @@ const useQueueStore = create<QueueState>((set, get) => ({
   addToQueue: (song) => {
     if (!song) return;
     set((s) => ({ queue: [...s.queue, song] }));
+    QueueManager.addToQueue(song);
 
     const playerState = usePlayerStore.getState();
     if (playerState.shuffleMode === 'classic') {
@@ -70,6 +74,7 @@ const useQueueStore = create<QueueState>((set, get) => ({
 
   removeFromQueue: (songId) => {
     set((s) => ({ queue: s.queue.filter((song) => song.id !== songId) }));
+    QueueManager.removeFromQueueById(songId);
 
     const { shuffleMode, shuffledOrder, shuffledIndex } = usePlayerStore.getState();
     if (shuffleMode === 'classic' && shuffledOrder.length) {
@@ -92,6 +97,7 @@ const useQueueStore = create<QueueState>((set, get) => ({
       next.splice(toIndex, 0, moved);
       return { queue: next };
     });
+    QueueManager.reorderQueue(fromIndex, toIndex);
 
     const { shuffleMode, shuffledOrder, shuffledIndex } = usePlayerStore.getState();
     if (shuffleMode === 'classic' && shuffledOrder.length) {
@@ -128,6 +134,7 @@ const useQueueStore = create<QueueState>((set, get) => ({
 
   clearQueue: () => {
     set({ queue: [], currentIndex: 0 });
+    QueueManager.clear();
     usePlayerStore.setState({ shuffledOrder: [], shuffledIndex: -1, playCountMap: {} });
   },
 }));

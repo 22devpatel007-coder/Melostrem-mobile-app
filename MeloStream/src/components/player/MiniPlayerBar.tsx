@@ -23,7 +23,7 @@ import Reanimated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useProgress } from '@rntp/player';
+import TrackPlayer, { useProgress } from '@rntp/player';
 import { COLORS } from '@constants/colors';
 import { LAYOUT } from '@constants/layout';
 import { TYPOGRAPHY } from '@constants/typography';
@@ -119,7 +119,6 @@ export const MiniPlayerBar = React.memo(({ onExpand }: MiniPlayerBarProps) => {
         const w = barWidth.current;
         if (!w) return;
         const pct = Math.max(0, Math.min(1, gs.moveX / w));
-        const TrackPlayer = (await import('@rntp/player')).default;
         await TrackPlayer.seekTo(pct * (duration || 0));
         isSeeking.current = false;
       },

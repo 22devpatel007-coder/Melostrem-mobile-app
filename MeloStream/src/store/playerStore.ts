@@ -20,6 +20,7 @@ let _paginationBridge: {
   fetchNextPage: () => void;
   hasNextPage: () => boolean;
   appendSongs: (songs: any[]) => void;
+  shuffleOrder: string[];
 } | null = null;
 
 export function registerPaginationBridge(bridge: typeof _paginationBridge) {
@@ -453,14 +454,28 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
     }));
 
     try {
-      TrackPlayer.setMediaItem({
-        mediaId: song.id,
-        url: src,
-        title: song.title,
-        artist: song.artist ?? "Unknown Artist",
-        artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
-        duration: song.duration ?? undefined,
-      });
+      const nativeQueue = TrackPlayer.getQueue();
+      const nativeIndex = nativeQueue.findIndex((item) => item.mediaId === song.id);
+
+      if (nativeIndex !== -1) {
+        // Song already loaded in native queue (normal case — queue was set via
+        // QueueManager.setQueue). Jump to it instead of replacing the queue,
+        // so lock screen / Bluetooth / notification skip controls keep working
+        // against the full queue.
+        TrackPlayer.skipToIndex(nativeIndex);
+      } else {
+        // Song not in native queue (e.g. played directly without a queue
+        // context set first). Fall back to loading it as a single item.
+        TrackPlayer.setMediaItems([{
+          mediaId: song.id,
+          url: src,
+          title: song.title,
+          artist: song.artist ?? "Unknown Artist",
+          artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
+          duration: song.duration ?? undefined,
+        }]);
+      }
+
       TrackPlayer.play();
       set({ isPlaying: true });
     } catch (err: any) {
@@ -514,11 +529,41 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
     if (shuffleMode === "classic") {
       let order = shuffledOrder;
       let idx = shuffledIndex;
+
       if (!order.length || idx >= order.length - 1) {
+        const bridgeOrder =
+          playbackContext.type === "playlist"
+            ? _playlistSongIds
+                .map((sid) => _playlistSongsLoaded.find((s) => s.id === sid))
+                .filter(Boolean)
+                .map((s: any) => s.id)
+            : _paginationBridge?.shuffleOrder;
+
+        if (bridgeOrder && bridgeOrder.length > 0) {
+          const playedIds = new Set(order.map((s) => s.id));
+          const nextId = bridgeOrder.find((id) => !playedIds.has(id));
+          if (nextId) {
+            const songPool =
+              playbackContext.type === "playlist" ? _playlistSongsLoaded : queue;
+            const nextSong = songPool.find((s: any) => s.id === nextId);
+            if (nextSong) {
+              set({ shuffledOrder: [...order, nextSong], shuffledIndex: idx + 1 });
+              playSong(nextSong);
+              return;
+            }
+            if (playbackContext.type !== "playlist" && _paginationBridge?.hasNextPage()) {
+              _pendingNextAfterFetch = true;
+              _paginationBridge.fetchNextPage();
+              return;
+            }
+          }
+        }
+
         order = vinylRoll(pool);
         idx = -1;
         set({ shuffledOrder: order });
       }
+
       const nextIdx = idx + 1;
       const nextSong = order[nextIdx];
       set({ shuffledIndex: nextIdx });

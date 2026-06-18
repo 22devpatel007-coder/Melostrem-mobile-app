@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { logout as authServiceLogout } from '@services/auth.service';
+import { logout as authServiceLogout, verifyWithBackend } from '@services/auth.service';
 import { setUserId } from '@services/errorReporter';
+import { sendOffline } from '@services/users.service';
 
 let _queryClient: any = null;
 
@@ -53,6 +54,9 @@ const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => {
     setUserId(user?.uid ?? null);
     set({ user });
+    if (user) {
+      verifyWithBackend().catch((err) => console.warn('[authStore] verifyWithBackend failed:', err?.message));
+    }
   },
 
   setAdmin: (isAdmin) => set({ isAdmin }),
@@ -60,6 +64,10 @@ const useAuthStore = create<AuthState>((set) => ({
   setLikedSongs: (likedSongs) => set({ likedSongs }),
 
   logout: async () => {
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser) {
+      sendOffline(currentUser.uid).catch((err) => console.warn('[authStore] sendOffline failed:', err?.message));
+    }
     try {
       await authServiceLogout();
     } finally {

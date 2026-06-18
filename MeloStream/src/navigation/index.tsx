@@ -9,11 +9,11 @@ import { useAuthStore } from '../store/authStore';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
 
-export function RootNavigator({ onReady }: { onReady?: () => void }) {
+export function RootNavigator() {
   const user = useAuthStore((s) => s.user);
 
   return (
-    <NavigationContainer linking={linking} onReady={onReady}>
+    <NavigationContainer linking={linking}>
       <Root.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Root.Screen name="App"  component={AppNavigator}  />
