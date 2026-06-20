@@ -1,5 +1,6 @@
 import api from './api';
-
+import { extractSong } from './songs.service';
+import type { Song } from '../types/song';
 // ── Envelope helpers ──────────────────────────────────────────────────────────
 const extractArray = (res: any): any[] => {
   if (Array.isArray(res?.data?.data)) return res.data.data;
@@ -17,7 +18,7 @@ const extractObject = (res: any): any | null => {
 export const getUsers         = async () => extractArray(await api.get('/users'));
 export const getUserById      = async (uid: string) => extractObject(await api.get(`/users/${uid}`));
 export const updateUserRole   = async (uid: string, role: string) => extractObject(await api.put(`/users/${uid}/role`, { role }));
-export const getLikedSongs    = async (uid: string) => extractArray(await api.get(`/users/${uid}/liked-songs`));
+export const getLikedSongs    = async (uid: string): Promise<Song[]> => extractArray(await api.get(`/users/${uid}/liked-songs`)).map(extractSong).filter((s): s is Song => s !== null);
 export const toggleLikeSong   = async (uid: string, songId: string) => extractArray(await api.post(`/users/${uid}/liked-songs/${songId}`));
 export const sendHeartbeat    = (uid: string) => api.post(`/users/${uid}/heartbeat`);
 export const sendOffline      = (uid: string) => api.post(`/users/${uid}/offline`);

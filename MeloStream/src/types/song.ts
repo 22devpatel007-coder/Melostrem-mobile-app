@@ -13,6 +13,8 @@ export interface Song {
   playCount: number;
   featured: boolean;
   uploadedBy: string;
+  titleLower?: string;
+  artistLower?: string;
   createdAt: any;
   updatedAt: any;
 }

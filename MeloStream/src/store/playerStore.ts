@@ -1,9 +1,10 @@
 import { create } from "zustand";
 import TrackPlayer, { RepeatMode, type PlaybackState } from "@rntp/player";
-import { MMKV } from 'react-native-mmkv';
+import { MMKV } from "react-native-mmkv";
 
 let storage: MMKV | null = null;
-const getStorage = () => storage ?? (storage = new MMKV({ id: 'player-storage' }));
+const getStorage = () =>
+  storage ?? (storage = new MMKV({ id: "player-storage" }));
 
 // ── Lazy queueStore accessor ──────────────────────────────────────────────────
 let _getQueueState: (() => any) | null = null;
@@ -316,7 +317,7 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   currentSong: null,
   recentlyPlayed: [],
   isPlaying: false,
-  volume:  1,
+  volume: 1,
   currentTime: 0,
   duration: 0,
   shuffleMode: "none",
@@ -439,7 +440,6 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
       }
     }
     if (!src) return;
-
     set((state) => ({
       currentSong: song,
       isPlaying: false,
@@ -455,29 +455,37 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
 
     try {
       const nativeQueue = TrackPlayer.getQueue();
-      const nativeIndex = nativeQueue.findIndex((item) => item.mediaId === song.id);
+      const nativeIndex = nativeQueue.findIndex(
+        (item) => item.mediaId === song.id,
+      );
 
       if (nativeIndex !== -1) {
-        // Song already loaded in native queue (normal case — queue was set via
-        // QueueManager.setQueue). Jump to it instead of replacing the queue,
-        // so lock screen / Bluetooth / notification skip controls keep working
-        // against the full queue.
-        TrackPlayer.skipToIndex(nativeIndex);
-      } else {
-        // Song not in native queue (e.g. played directly without a queue
-        // context set first). Fall back to loading it as a single item.
-        TrackPlayer.setMediaItems([{
+        TrackPlayer.replaceMediaItem(nativeIndex, {
           mediaId: song.id,
           url: src,
           title: song.title,
           artist: song.artist ?? "Unknown Artist",
           artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
           duration: song.duration ?? undefined,
-        }]);
+        });
+        TrackPlayer.skipToIndex(nativeIndex);
+        TrackPlayer.play();
+        set({ isPlaying: true });
+      } else {
+        TrackPlayer.setMediaItems([
+          {
+            mediaId: song.id,
+            url: src,
+            title: song.title,
+            artist: song.artist ?? "Unknown Artist",
+            artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
+            duration: song.duration ?? undefined,
+          },
+        ]);
+        TrackPlayer.play();
+        set({ isPlaying: true });
+        
       }
-
-      TrackPlayer.play();
-      set({ isPlaying: true });
     } catch (err: any) {
       console.error("[playerStore] TrackPlayer error:", err.message);
       set({ isPlaying: false });
@@ -544,14 +552,22 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
           const nextId = bridgeOrder.find((id) => !playedIds.has(id));
           if (nextId) {
             const songPool =
-              playbackContext.type === "playlist" ? _playlistSongsLoaded : queue;
+              playbackContext.type === "playlist"
+                ? _playlistSongsLoaded
+                : queue;
             const nextSong = songPool.find((s: any) => s.id === nextId);
             if (nextSong) {
-              set({ shuffledOrder: [...order, nextSong], shuffledIndex: idx + 1 });
+              set({
+                shuffledOrder: [...order, nextSong],
+                shuffledIndex: idx + 1,
+              });
               playSong(nextSong);
               return;
             }
-            if (playbackContext.type !== "playlist" && _paginationBridge?.hasNextPage()) {
+            if (
+              playbackContext.type !== "playlist" &&
+              _paginationBridge?.hasNextPage()
+            ) {
               _pendingNextAfterFetch = true;
               _paginationBridge.fetchNextPage();
               return;

@@ -1,4 +1,5 @@
 import api from './api';
+import type { Song } from '../types/song';
 import { MMKV } from 'react-native-mmkv';
 
 const _audioUrlCache = new Map<string, { url: string; expiresAt: number }>();
@@ -58,7 +59,7 @@ export const getShuffledSongIds = async (): Promise<string[]> => {
   }
 };
 
-export const extractSong = (payload: any) => {
+export const extractSong = (payload: any): Song | null => {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   return {
     id:          typeof payload.id          === 'string'  ? payload.id               : '',
@@ -78,6 +79,7 @@ export const extractSong = (payload: any) => {
     uploadedBy:  typeof payload.uploadedBy  === 'string'  ? payload.uploadedBy       : '',
     createdAt:   payload.createdAt  ?? null,
     updatedAt:   payload.updatedAt  ?? null,
+    audioUrl:    payload.audioUrl   ?? payload.fileUrl ?? '',
   };
 };
 

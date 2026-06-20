@@ -27,7 +27,9 @@ const useQueueStore = create<QueueState>((set, get) => ({
     QueueManager.setQueue(songs, idx);
     const playerState = usePlayerStore.getState();
     playerState.resetShuffleSession();
-    playerState.playSong(songs[idx]);
+    setTimeout(() => {
+      playerState.playSong(songs[idx]);
+    }, 150);
   },
 
   setQueue: (songs, startIndex = 0) => {
