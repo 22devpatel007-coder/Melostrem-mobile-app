@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import TrackPlayer from '@rntp/player';
+import TrackPlayer, { PlayerCommand } from '@rntp/player';
+import { PlaybackServiceForeground } from '../player/PlaybackService';
 
 export default function PlayerProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
@@ -11,14 +12,29 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     async function setup() {
       try {
         await TrackPlayer.setupPlayer({
-  contentType: 'music',
-  handleAudioBecomingNoisy: true,
-  android: { wakeMode: 'network' },
-});
+          contentType: 'music',
+          handleAudioBecomingNoisy: true,
+          android: { wakeMode: 'network' },
+        });
       } catch {
         // Already initialized
       }
-    }
+      PlaybackServiceForeground();
+      TrackPlayer.setCommands({
+        capabilities: [
+          PlayerCommand.PlayPause,
+          PlayerCommand.Next,
+          PlayerCommand.Previous,
+          PlayerCommand.Stop,
+          PlayerCommand.Seek,
+        ],
+        handling: 'hybrid',
+        perCommandHandling: {
+          [PlayerCommand.Next]: 'js',
+          [PlayerCommand.Previous]: 'js',
+        },
+      });
+   }
 
     setup();
   }, []);

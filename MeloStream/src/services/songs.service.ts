@@ -1,4 +1,6 @@
 import api from './api';
+import type { Song } from '../types/song';
+import { MMKV } from 'react-native-mmkv';
 
 const _audioUrlCache = new Map<string, { url: string; expiresAt: number }>();
 const AUDIO_URL_CACHE_TTL_MS = 300_000;
@@ -8,7 +10,56 @@ const unwrap = (res: any) => {
   return body != null ? body : {};
 };
 
-export const extractSong = (payload: any) => {
+let _storage: MMKV | null = null;
+const getStorage = () => _storage ?? (_storage = new MMKV({ id: 'melostream-storage' }));
+const SHUFFLE_SEED_KEY = 'library_shuffle_seed';
+
+function shuffleArray<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getOrCreateShuffleSeed(allIds: string[]): string[] {
+  try {
+    const stored = getStorage().getString(SHUFFLE_SEED_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const seedSet = new Set(parsed);
+        const newIds = allIds.filter((id) => !seedSet.has(id));
+        if (newIds.length === 0) return parsed;
+        const merged = [...parsed, ...newIds];
+        try { getStorage().set(SHUFFLE_SEED_KEY, JSON.stringify(merged)); } catch (_) {}
+        return merged;
+      }
+    }
+  } catch (_) {}
+
+  const shuffled = shuffleArray([...allIds]);
+  try { getStorage().set(SHUFFLE_SEED_KEY, JSON.stringify(shuffled)); } catch (_) {}
+  return shuffled;
+}
+
+export function clearLibraryShuffleSeed(): void {
+  try { getStorage().delete(SHUFFLE_SEED_KEY); } catch (_) {}
+}
+
+export const getShuffledSongIds = async (): Promise<string[]> => {
+  try {
+    const res = await api.get('/songs/ids');
+    const ids = unwrap(res)?.ids;
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    return getOrCreateShuffleSeed(ids);
+  } catch (err: any) {
+    console.warn('[songs.service] getShuffledSongIds failed:', err.message);
+    return [];
+  }
+};
+
+export const extractSong = (payload: any): Song | null => {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   return {
     id:          typeof payload.id          === 'string'  ? payload.id               : '',
@@ -28,6 +79,7 @@ export const extractSong = (payload: any) => {
     uploadedBy:  typeof payload.uploadedBy  === 'string'  ? payload.uploadedBy       : '',
     createdAt:   payload.createdAt  ?? null,
     updatedAt:   payload.updatedAt  ?? null,
+    audioUrl:    payload.audioUrl   ?? payload.fileUrl ?? '',
   };
 };
 

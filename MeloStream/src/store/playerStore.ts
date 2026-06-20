@@ -1,9 +1,10 @@
 import { create } from "zustand";
 import TrackPlayer, { RepeatMode, type PlaybackState } from "@rntp/player";
-import { MMKV } from 'react-native-mmkv';
+import { MMKV } from "react-native-mmkv";
 
 let storage: MMKV | null = null;
-const getStorage = () => storage ?? (storage = new MMKV({ id: 'player-storage' }));
+const getStorage = () =>
+  storage ?? (storage = new MMKV({ id: "player-storage" }));
 
 // ── Lazy queueStore accessor ──────────────────────────────────────────────────
 let _getQueueState: (() => any) | null = null;
@@ -20,6 +21,7 @@ let _paginationBridge: {
   fetchNextPage: () => void;
   hasNextPage: () => boolean;
   appendSongs: (songs: any[]) => void;
+  shuffleOrder: string[];
 } | null = null;
 
 export function registerPaginationBridge(bridge: typeof _paginationBridge) {
@@ -44,6 +46,7 @@ export function _appendPlaylistSongs(songs: any[]) {
 }
 
 let _pendingNextAfterFetch = false;
+let _lastPreloadedMediaId: string | null | undefined = null;
 
 export function appendSongsToQueue(newSongs: any[]) {
   if (!Array.isArray(newSongs) || newSongs.length === 0) {
@@ -62,6 +65,24 @@ export function appendSongsToQueue(newSongs: any[]) {
     setTimeout(() => {
       usePlayerStore.getState().playNext();
     }, 0);
+  }
+}
+
+function preloadNextInQueue(currentSongId: string) {
+  try {
+    const nativeQueue = TrackPlayer.getQueue();
+    const currentIndex = nativeQueue.findIndex((item) => item.mediaId === currentSongId);
+    if (currentIndex === -1) return;
+    const nextItem = nativeQueue[currentIndex + 1];
+    if (!nextItem || nextItem.mediaId === _lastPreloadedMediaId) return;
+    if (_lastPreloadedMediaId) {
+      const stale = nativeQueue.find((item) => item.mediaId === _lastPreloadedMediaId);
+      if (stale) TrackPlayer.cancelPreload(stale);
+    }
+    TrackPlayer.preload(nextItem);
+    _lastPreloadedMediaId = nextItem.mediaId;
+  } catch (err: any) {
+    console.warn('[playerStore] preloadNextInQueue failed:', err.message);
   }
 }
 
@@ -293,7 +314,8 @@ interface PlayerState {
   resumeSong: () => Promise<void>;
   togglePlay: () => void;
   setVolume: (v: number) => void;
-  setCurrentTime: (t: number) => void;
+  commitVolume: (v: number) => void;
+  setCurrentTime: (t: number) => Promise<void>;
   seekBy: (seconds: number) => void;
   setRepeatMode: (mode: "none" | "all" | "one") => void;
   cycleShuffleMode: () => void;
@@ -315,7 +337,7 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   currentSong: null,
   recentlyPlayed: [],
   isPlaying: false,
-  volume:  1,
+  volume: 1,
   currentTime: 0,
   duration: 0,
   shuffleMode: "none",
@@ -438,7 +460,6 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
       }
     }
     if (!src) return;
-
     set((state) => ({
       currentSong: song,
       isPlaying: false,
@@ -453,16 +474,39 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
     }));
 
     try {
-      TrackPlayer.setMediaItem({
-        mediaId: song.id,
-        url: src,
-        title: song.title,
-        artist: song.artist ?? "Unknown Artist",
-        artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
-        duration: song.duration ?? undefined,
-      });
-      TrackPlayer.play();
-      set({ isPlaying: true });
+      const nativeQueue = TrackPlayer.getQueue();
+      const nativeIndex = nativeQueue.findIndex(
+        (item) => item.mediaId === song.id,
+      );
+
+      if (nativeIndex !== -1) {
+        TrackPlayer.replaceMediaItem(nativeIndex, {
+          mediaId: song.id,
+          url: src,
+          title: song.title,
+          artist: song.artist ?? "Unknown Artist",
+          artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
+          duration: song.duration ?? undefined,
+        });
+        TrackPlayer.skipToIndex(nativeIndex);
+        TrackPlayer.play();
+        set({ isPlaying: true });
+        preloadNextInQueue(song.id);
+      } else {
+        TrackPlayer.setMediaItems([
+          {
+            mediaId: song.id,
+            url: src,
+            title: song.title,
+            artist: song.artist ?? "Unknown Artist",
+            artworkUrl: song.coverUrl ?? song.imageUrl ?? undefined,
+            duration: song.duration ?? undefined,
+          },
+        ]);
+        TrackPlayer.play();
+        set({ isPlaying: true });
+        preloadNextInQueue(song.id);
+      }
     } catch (err: any) {
       console.error("[playerStore] TrackPlayer error:", err.message);
       set({ isPlaying: false });
@@ -514,11 +558,49 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
     if (shuffleMode === "classic") {
       let order = shuffledOrder;
       let idx = shuffledIndex;
+
       if (!order.length || idx >= order.length - 1) {
+        const bridgeOrder =
+          playbackContext.type === "playlist"
+            ? _playlistSongIds
+                .map((sid) => _playlistSongsLoaded.find((s) => s.id === sid))
+                .filter(Boolean)
+                .map((s: any) => s.id)
+            : _paginationBridge?.shuffleOrder;
+
+        if (bridgeOrder && bridgeOrder.length > 0) {
+          const playedIds = new Set(order.map((s) => s.id));
+          const nextId = bridgeOrder.find((id) => !playedIds.has(id));
+          if (nextId) {
+            const songPool =
+              playbackContext.type === "playlist"
+                ? _playlistSongsLoaded
+                : queue;
+            const nextSong = songPool.find((s: any) => s.id === nextId);
+            if (nextSong) {
+              set({
+                shuffledOrder: [...order, nextSong],
+                shuffledIndex: idx + 1,
+              });
+              playSong(nextSong);
+              return;
+            }
+            if (
+              playbackContext.type !== "playlist" &&
+              _paginationBridge?.hasNextPage()
+            ) {
+              _pendingNextAfterFetch = true;
+              _paginationBridge.fetchNextPage();
+              return;
+            }
+          }
+        }
+
         order = vinylRoll(pool);
         idx = -1;
         set({ shuffledOrder: order });
       }
+
       const nextIdx = idx + 1;
       const nextSong = order[nextIdx];
       set({ shuffledIndex: nextIdx });
@@ -608,12 +690,15 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setVolume: (v) => {
     TrackPlayer.setVolume(v);
-    getStorage().set("melostream_volume", String(v));
     set({ volume: v });
   },
 
-  setCurrentTime: (t) => {
-    TrackPlayer.seekTo(t);
+  commitVolume: (v) => {
+    getStorage().set("melostream_volume", String(v));
+  },
+
+  setCurrentTime: async (t) => {
+    await TrackPlayer.seekTo(t);
     set({ currentTime: t });
   },
 

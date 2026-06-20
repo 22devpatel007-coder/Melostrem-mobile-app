@@ -1,8 +1,8 @@
 import { registerRootComponent } from 'expo';
 import TrackPlayer from '@rntp/player';
-import { PlaybackService } from './src/player/PlaybackService';
+import { PlaybackServiceBackgroundFactory } from './src/player/PlaybackService';
 import App from './App';
 
-TrackPlayer.registerBackgroundEventHandler(() => PlaybackService);
+TrackPlayer.registerBackgroundEventHandler(PlaybackServiceBackgroundFactory);
 
 registerRootComponent(App);

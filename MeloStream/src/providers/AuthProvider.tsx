@@ -1,29 +1,35 @@
-import { useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@config/firebase';
-import { useAuthStore } from '@store/authStore';
-import * as SecureStore from 'expo-secure-store';
+import { useEffect } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@config/firebase";
+import { useAuthStore } from "@store/authStore";
+import * as SecureStore from "expo-secure-store";
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
+export default function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { setUser, setAdmin, setLoading } = useAuthStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth , async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
-        await SecureStore.setItemAsync('auth_token', token);
+        await SecureStore.setItemAsync("auth_token", token);
         const idTokenResult = await firebaseUser.getIdTokenResult();
         const isAdmin = idTokenResult.claims?.admin === true;
         setUser({
-          uid:         firebaseUser.uid,
-          email:       firebaseUser.email,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
           displayName: firebaseUser.displayName,
-          photoURL:    firebaseUser.photoURL,
+          photoURL: firebaseUser.photoURL,
           isAdmin,
         });
         setAdmin(isAdmin);
       } else {
-        await SecureStore.deleteItemAsync('auth_token').catch(() => {});
+        await SecureStore.deleteItemAsync("auth_token").catch((e) =>
+          console.warn("[AuthProvider] Failed to delete token:", e),
+        );
         setUser(null);
         setAdmin(false);
       }

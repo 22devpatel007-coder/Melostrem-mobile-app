@@ -27,10 +27,11 @@ import { LAYOUT } from '@constants/layout';
 import { TYPOGRAPHY } from '@constants/typography';
 import { usePlayerStore } from '@store/playerStore';
 import Svg, { Line, Polygon, Rect, Path } from 'react-native-svg';
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { LikeButton } from '@components/player/LikeButton';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const ARTWORK_MAX_SIZE = SCREEN_WIDTH - LAYOUT.spacing.xl * 2;
+const ARTWORK_SIZE = Math.min(ARTWORK_MAX_SIZE, SCREEN_HEIGHT * 0.38);
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -122,11 +123,18 @@ export function FullScreenPlayerScreen() {
   const setRepeatMode  = usePlayerStore((s) => s.setRepeatMode);
   const cycleShuffleMode = usePlayerStore((s) => s.cycleShuffleMode);
   const setVolume      = usePlayerStore((s) => s.setVolume);
+  const commitVolume   = usePlayerStore((s) => s.commitVolume);
+  const setCurrentTime = usePlayerStore((s) => s.setCurrentTime);
 
-  const { position, duration } = useProgress(250);
+  const { position, duration } = useProgress(0.25);
 
   // ── Swipe down to close ───────────────────────────────────────────────────
   const translateY = useRef(new Animated.Value(0)).current;
+  const dragOpacity = translateY.interpolate({
+    inputRange:  [0, SCREEN_HEIGHT * 0.6],
+    outputRange: [1, 0.85],
+    extrapolate: 'clamp',
+  });
 
   const swipePan = useRef(
     PanResponder.create({
@@ -180,8 +188,7 @@ export function FullScreenPlayerScreen() {
         const w = progressBarWidth.current;
         if (!w) return;
         const pct = Math.max(0, Math.min(1, gs.moveX / w));
-        const TrackPlayer = (await import('@rntp/player')).default;
-        await TrackPlayer.seekTo(pct * (duration || 0));
+        await setCurrentTime(pct * (duration || 0));
         isSeeking.current = false;
       },
       onPanResponderTerminate: () => { isSeeking.current = false; },
@@ -213,7 +220,12 @@ export function FullScreenPlayerScreen() {
         volumeAnim.setValue(v);
         setVolume(v);
       },
-      onPanResponderRelease: () => {},
+      onPanResponderRelease: (_, gs) => {
+        const w = volumeBarWidth.current;
+        if (!w) return;
+        const v = Math.max(0, Math.min(1, gs.moveX / w));
+        commitVolume(v);
+      },
     })
   ).current;
 
@@ -234,13 +246,6 @@ export function FullScreenPlayerScreen() {
     if (!t || isNaN(t)) return '0:00';
     return `${Math.floor(t / 60)}:${Math.floor(t % 60).toString().padStart(2, '0')}`;
   };
-  const slideIn = useSharedValue(SCREEN_HEIGHT);
-const slideStyle = useAnimatedStyle(() => ({
-  transform: [{ translateY: slideIn.value }],
-}));
-React.useEffect(() => {
-  slideIn.value = withSpring(0, { damping: 20, stiffness: 180 });
-}, []);
   if (!currentSong) {
     navigation.goBack();
     return null;
@@ -249,8 +254,7 @@ React.useEffect(() => {
   const coverUri = currentSong.coverUrl || currentSong.imageUrl;
 
   return (
-    <Reanimated.View style={[styles.root, slideStyle]}>
-  <Animated.View style={{ flex: 1, transform: [{ translateY }] }} {...swipePan.panHandlers}>
+    <Animated.View style={[styles.root, { transform: [{ translateY }], opacity: dragOpacity }]} {...swipePan.panHandlers}>
 
       {/* ── Drag handle ── */}
       <View style={styles.handle} />
@@ -390,7 +394,6 @@ React.useEffect(() => {
       </View>
 
     </Animated.View>
-</Reanimated.View>
   );
 }
 
@@ -400,8 +403,9 @@ const styles = StyleSheet.create({
     flex:            1,
     backgroundColor: COLORS.background,
     paddingTop:      LAYOUT.spacing.sm,
+    paddingBottom:   LAYOUT.spacing.xl,
+    justifyContent:  'space-between',
   },
-
   handle: {
     width:           36,
     height:          4,
@@ -440,11 +444,11 @@ const styles = StyleSheet.create({
   // Artwork
   artworkContainer: {
     paddingHorizontal: LAYOUT.spacing.xl,
-    marginBottom:      LAYOUT.spacing.lg,
   },
   artwork: {
-    width:        '100%',
-    aspectRatio:  1,
+    width:        ARTWORK_SIZE,
+    height:       ARTWORK_SIZE,
+    alignSelf:    'center',
     borderRadius: LAYOUT.radius.xl,
   },
   artworkFallback: {
@@ -453,8 +457,10 @@ const styles = StyleSheet.create({
     justifyContent:  'center',
   },
   artworkFallbackText: {
-    fontSize: 64,
-    color:    COLORS.textMuted,
+    fontSize:   ARTWORK_SIZE * 0.28,
+    lineHeight: ARTWORK_SIZE * 0.28,
+    color:      COLORS.textMuted,
+    textAlign:  'center',
   },
 
   // Song info
@@ -462,7 +468,6 @@ const styles = StyleSheet.create({
     flexDirection:     'row',
     alignItems:        'center',
     paddingHorizontal: LAYOUT.spacing.xl,
-    marginBottom:      LAYOUT.spacing.lg,
     gap:               LAYOUT.spacing.md,
   },
   songText: {
@@ -485,7 +490,6 @@ const styles = StyleSheet.create({
   // Progress
   progressSection: {
     paddingHorizontal: LAYOUT.spacing.xl,
-    marginBottom:      LAYOUT.spacing.lg,
   },
   progressTrack: {
     height:          6,
@@ -530,7 +534,6 @@ const styles = StyleSheet.create({
     alignItems:        'center',
     justifyContent:    'space-between',
     paddingHorizontal: LAYOUT.spacing.xl,
-    marginBottom:      LAYOUT.spacing.xl,
   },
   sideBtn: {
     width:          44,

@@ -1,11 +1,9 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types/navigation';
 import { BottomTabNavigator } from './BottomTabNavigator';
-import { usePlayerStore } from '../store/playerStore';
 import NetworkErrorBanner from '@components/errors/NetworkErrorBanner';
-import { MiniPlayerBar } from '@components/player/MiniPlayerBar';
 import { FullScreenPlayerScreen } from '@screens/player/FullScreenPlayerScreen';
 
 const Placeholder = (name: string) => () => (
@@ -24,12 +22,6 @@ const SuggestionsScreen      = Placeholder('Suggestions');
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export function AppNavigator() {
-  const currentSong = usePlayerStore((s) => s.currentSong);
-
-
-
-const handleExpand = useCallback(() => {}, []);
-
   return (
     <View style={styles.root}>
       <NetworkErrorBanner />
@@ -41,7 +33,10 @@ const handleExpand = useCallback(() => {}, []);
         <Stack.Screen
           name="FullScreenPlayer"
           component={FullScreenPlayerScreen}
-          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+          options={{
+            presentation: 'transparentModal',
+            animation: 'slide_from_bottom',
+          }}
         />
         <Stack.Screen
           name="PlaylistDetail"
@@ -68,9 +63,7 @@ const handleExpand = useCallback(() => {}, []);
           component={SuggestionsScreen}
           options={{ presentation: 'modal' }}
         />
-      </Stack.Navigator>
-
-      {currentSong && <MiniPlayerBar onExpand={handleExpand} />}
+     </Stack.Navigator>
     </View>
   );
 }
