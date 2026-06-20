@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import TrackPlayer, { PlayerCommand } from '@rntp/player';
-import { PlaybackService } from '../player/PlaybackService';
+import { PlaybackServiceForeground } from '../player/PlaybackService';
 
 export default function PlayerProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
@@ -19,7 +19,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       } catch {
         // Already initialized
       }
-      PlaybackService();
+      PlaybackServiceForeground();
       TrackPlayer.setCommands({
         capabilities: [
           PlayerCommand.PlayPause,
@@ -34,7 +34,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
           [PlayerCommand.Previous]: 'js',
         },
       });
-    }
+   }
 
     setup();
   }, []);

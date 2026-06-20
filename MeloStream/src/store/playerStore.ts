@@ -46,6 +46,7 @@ export function _appendPlaylistSongs(songs: any[]) {
 }
 
 let _pendingNextAfterFetch = false;
+let _lastPreloadedMediaId: string | null | undefined = null;
 
 export function appendSongsToQueue(newSongs: any[]) {
   if (!Array.isArray(newSongs) || newSongs.length === 0) {
@@ -64,6 +65,24 @@ export function appendSongsToQueue(newSongs: any[]) {
     setTimeout(() => {
       usePlayerStore.getState().playNext();
     }, 0);
+  }
+}
+
+function preloadNextInQueue(currentSongId: string) {
+  try {
+    const nativeQueue = TrackPlayer.getQueue();
+    const currentIndex = nativeQueue.findIndex((item) => item.mediaId === currentSongId);
+    if (currentIndex === -1) return;
+    const nextItem = nativeQueue[currentIndex + 1];
+    if (!nextItem || nextItem.mediaId === _lastPreloadedMediaId) return;
+    if (_lastPreloadedMediaId) {
+      const stale = nativeQueue.find((item) => item.mediaId === _lastPreloadedMediaId);
+      if (stale) TrackPlayer.cancelPreload(stale);
+    }
+    TrackPlayer.preload(nextItem);
+    _lastPreloadedMediaId = nextItem.mediaId;
+  } catch (err: any) {
+    console.warn('[playerStore] preloadNextInQueue failed:', err.message);
   }
 }
 
@@ -295,7 +314,8 @@ interface PlayerState {
   resumeSong: () => Promise<void>;
   togglePlay: () => void;
   setVolume: (v: number) => void;
-  setCurrentTime: (t: number) => void;
+  commitVolume: (v: number) => void;
+  setCurrentTime: (t: number) => Promise<void>;
   seekBy: (seconds: number) => void;
   setRepeatMode: (mode: "none" | "all" | "one") => void;
   cycleShuffleMode: () => void;
@@ -471,6 +491,7 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
         TrackPlayer.skipToIndex(nativeIndex);
         TrackPlayer.play();
         set({ isPlaying: true });
+        preloadNextInQueue(song.id);
       } else {
         TrackPlayer.setMediaItems([
           {
@@ -484,7 +505,7 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
         ]);
         TrackPlayer.play();
         set({ isPlaying: true });
-        
+        preloadNextInQueue(song.id);
       }
     } catch (err: any) {
       console.error("[playerStore] TrackPlayer error:", err.message);
@@ -669,12 +690,15 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setVolume: (v) => {
     TrackPlayer.setVolume(v);
-    getStorage().set("melostream_volume", String(v));
     set({ volume: v });
   },
 
-  setCurrentTime: (t) => {
-    TrackPlayer.seekTo(t);
+  commitVolume: (v) => {
+    getStorage().set("melostream_volume", String(v));
+  },
+
+  setCurrentTime: async (t) => {
+    await TrackPlayer.seekTo(t);
     set({ currentTime: t });
   },
 

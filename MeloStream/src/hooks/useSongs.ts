@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@constants/queryKeys';
 import { getSongs, getShuffledSongIds } from '@services/songs.service';
@@ -58,9 +58,15 @@ export const useSongs = (limit = PAGE_LIMIT): UseSongsReturn => {
     context: 'loading songs',
   });
 
-  const songs: Song[] = query.data?.pages.flatMap((p) =>
-    Array.isArray(p?.songs) ? p.songs : [],
-  ) ?? [];
+  const songs: Song[] = useMemo(() => {
+    const rawSongs = query.data?.pages.flatMap((p) => Array.isArray(p?.songs) ? p.songs : []) ?? [];
+    if (!shuffleOrder || shuffleOrder.length === 0) return rawSongs;
+    const songMap = new Map(rawSongs.map((s) => [s.id, s]));
+    const ordered = shuffleOrder.map((id) => songMap.get(id)).filter((s): s is Song => Boolean(s));
+    const inSeed = new Set(shuffleOrder);
+    const extras = rawSongs.filter((s) => !inSeed.has(s.id));
+    return [...ordered, ...extras];
+  }, [query.data?.pages, shuffleOrder]);
 
   // ── Pagination bridge ─────────────────────────────────────────────────────
   useEffect(() => {

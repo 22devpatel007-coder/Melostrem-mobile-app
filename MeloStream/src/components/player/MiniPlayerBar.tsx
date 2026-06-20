@@ -17,13 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Reanimated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import TrackPlayer, { useProgress } from '@rntp/player';
+import { useProgress } from '@rntp/player';
 import { COLORS } from '@constants/colors';
 import { LAYOUT } from '@constants/layout';
 import { TYPOGRAPHY } from '@constants/typography';
@@ -70,8 +64,8 @@ export const MiniPlayerBar = React.memo(({ onExpand }: MiniPlayerBarProps) => {
   const isPlaying   = usePlayerStore((s) => s.isPlaying);
   const togglePlay  = usePlayerStore((s) => s.togglePlay);
   const playNext    = usePlayerStore((s) => s.playNext);
-
-  const { position, duration } = useProgress(250);
+  const setCurrentTime = usePlayerStore((s) => s.setCurrentTime);
+  const { position, duration } = useProgress(0.25);
 
   // ── RN Animated — progress bar only ───────────────────────────────────────
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -83,25 +77,6 @@ export const MiniPlayerBar = React.memo(({ onExpand }: MiniPlayerBarProps) => {
     const pct = position / duration;
     progressAnim.setValue(pct);
   }, [position, duration, progressAnim]);
-
-  // ── Reanimated — slide-up animation ───────────────────────────────────────
-  const translateY = useSharedValue(80);
-  const opacity    = useSharedValue(0);
-
-  useEffect(() => {
-    if (currentSong) {
-      translateY.value = withSpring(0, { damping: 15, stiffness: 120 });
-      opacity.value    = withTiming(1, { duration: 200 });
-    } else {
-      translateY.value = withSpring(80, { damping: 15 });
-      opacity.value    = withTiming(0, { duration: 150 });
-    }
-  }, [currentSong]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity:   opacity.value,
-  }));
 
   // ── Seek via PanResponder ─────────────────────────────────────────────────
   const panResponder = useRef(
@@ -119,7 +94,7 @@ export const MiniPlayerBar = React.memo(({ onExpand }: MiniPlayerBarProps) => {
         const w = barWidth.current;
         if (!w) return;
         const pct = Math.max(0, Math.min(1, gs.moveX / w));
-        await TrackPlayer.seekTo(pct * (duration || 0));
+        await setCurrentTime(pct * (duration || 0));
         isSeeking.current = false;
       },
       onPanResponderTerminate: () => { isSeeking.current = false; },
@@ -141,7 +116,7 @@ export const MiniPlayerBar = React.memo(({ onExpand }: MiniPlayerBarProps) => {
   const coverUri = currentSong.coverUrl || currentSong.imageUrl;
 
   return (
-    <Reanimated.View style={[styles.root, animStyle]}>
+    <View style={styles.root}>
       {/* ── Progress bar ── */}
       <View
         style={styles.seekTrack}
@@ -214,7 +189,7 @@ export const MiniPlayerBar = React.memo(({ onExpand }: MiniPlayerBarProps) => {
           </TouchableOpacity>
         </View>
       </View>
-    </Reanimated.View>
+    </View>
   );
 });
 

@@ -6,6 +6,7 @@ export const QueueManager = {
   setQueue(songs: Song[], startIndex = 0) {
     const tracks = songs.map(buildTrack);
     TrackPlayer.setMediaItems(tracks, startIndex);
+    TrackPlayer.play();
   },
 
   addToQueue(song: Song) {
